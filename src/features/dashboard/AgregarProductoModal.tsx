@@ -28,7 +28,7 @@ export default function AgregarProducto({ token, onClose, onSuccess }: Props) {
   const [subiendoImagen, setSubiendoImagen] = useState(false);
   const [stock, setStock] = useState<number | undefined>(undefined);
   const [destacado, setDestacado] = useState(false);
-  const tallesRopa = ["XS", "S", "M", "L", "XL", "XXL", "XXXL"];
+  const tallesRopa = ["1","2","3","4","5","6","XS", "S", "M", "L", "XL", "XXL", "XXXL"];
   // Talles de calzado del 34 al 44
   const tallesCalzado = Array.from({ length: 11 }, (_, i) =>
     (34 + i).toString()
