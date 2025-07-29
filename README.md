@@ -1,70 +1,58 @@
-src/
-├── api/              # Funciones para interactuar con la API (axios/fetch)
-├── components/       # Componentes reutilizables como botones, inputs, modales, etc.
-├── features/         # Secciones o vistas principales de la app (por ejemplo, login y dashboard)
-│   ├── login/        # Lógica y componentes propios de la vista de login
-│   └── dashboard/    # Lógica y componentes propios del panel administrativo
-├── hooks/            # Custom hooks reutilizables (como useAuth, useFetch, etc.)
-├── types/            # Definiciones globales de tipos TypeScript
-├── utils/            # Funciones utilitarias (formateo de datos, validaciones, etc.)
-├── App.tsx           # Definición de rutas y estructura general de la app
-├── main.tsx          # Punto de entrada principal
-└── index.css         # Estilos globales, incluye configuración de Tailwind
+# 🧩 Dashboard Ales - Panel de administración de catálogo
+
+Este proyecto es un **panel administrativo web** desarrollado con **React + TypeScript + Vite + TailwindCSS**, destinado a la gestión de productos para un catálogo de indumentaria. Está diseñado para ser utilizado por el dueño de un negocio, permitiéndole **visualizar, agregar, editar y eliminar productos**, así como filtrarlos de forma dinámica.
+
+## 🚀 Funcionalidades principales
+
+- 🔐 Inicio de sesión con autenticación JWT.
+- 📦 Visualización de productos en una tabla interactiva.
+- 🧮 Filtros dinámicos por tipo de producto, tipo de prenda y nombre.
+- ➕ Agregar productos mediante un formulario modal.
+- 📝 Editar productos existentes.
+- ❌ Eliminar productos con confirmación.
+- ☁️ Subida de imágenes a servicios externos (ej: ImgBB) para obtener URLs públicas.
+
+## 🖼️ Vista previa
+
+> 📸 Próximamente imágenes o gifs del dashboard en acción.
+
+## 🛠️ Tecnologías utilizadas
+
+Frontend:
+- <b>React</b> + <b>Vite</b> + <b>TypeScript</b>
+- <b>TailwindCSS</b> para estilos rápidos y responsivos
+- <b>React Icons</b> y animaciones para una mejor UX
+
+Backend (externo):
+- <b>Node.js + Express</b> con API REST (no incluido en este repositorio)
+- Base de datos: <b>MongoDB Atlas</b>
 
 
+## 🔧 Cómo correr el proyecto
 
+1. Cloná el repositorio:
 
-# React + TypeScript + Vite
+```bash
+git clone https://github.com/LautaroMalleret/dashboard-ales.git
+cd dashboard-ales
+```
+2. Instalá las dependencias:
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+```bash
+npm install
+```
+3. Creá un archivo .env con la siguiente variable:
+```bash
+VITE_API_URL=http://tudominio.api.com
+```
+4. Ejecutá el proyecto:
+```bash
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## ✅ Estado del proyecto
+🚧 En desarrollo: El frontend está completamente funcional, pero puede seguir optimizándose en cuanto a validaciones, feedback visual y modularización del código.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+## 📩 Contacto
+Creado por Lautaro Malleret
+📧 lautaromalleret@gmail.com
