@@ -1,5 +1,13 @@
-import {  useState } from "react";
-
+import { useState } from "react";
+import InputNombre from "../../components/inputNombre";
+import InputPrecio from "../../components/inputPrecio";
+import InputColor from "../../components/inputColor";
+import InputDescripcion from "../../components/inputDescripcion";
+import InputStock from "../../components/inputStock";
+import CheckboxDestacado from "../../components/checkDestacado";
+import SelectorTalles from "../../components/selectorTalles";
+import type Producto from "../../types/producto";
+import { editarProducto } from "../../api/productosApi";
 //modal para editar un producto
 //muestra un formulario con los datos del producto
 //y permite editarlo y guardarlo
@@ -11,26 +19,12 @@ interface Props {
   onUpdate: () => void;
 }
 
-interface Producto {
-  _id: string;
-  nombre: string;
-  precio: number;
-  color: string;
-  descripcion: string;
-  tipo: "ropa" | "accesorio" | "calzado";
-  imagenes: string[];
-  stock: number;
-  destacado: boolean;
-  ropa?: {
-    talle: string[];
-    tipoPrenda: string;
-  };
-  calzado?: {
-    talle: string[];
-  };
-}
-
-export default function EditarProductoModal({ producto, token, onClose, onUpdate }: Props) {
+export default function EditarProductoModal({
+  producto,
+  token,
+  onClose,
+  onUpdate,
+}: Props) {
   // Estados locales para manejar los campos del formulario
   // Inicializa los estados con los valores del producto que se está editando
   const [nombre, setNombre] = useState(producto.nombre);
@@ -40,25 +34,24 @@ export default function EditarProductoModal({ producto, token, onClose, onUpdate
   const [imagenes, setImagenes] = useState<string[]>(producto.imagenes);
   const [stock, setStock] = useState<number | undefined>(producto.stock);
   const [destacado, setDestacado] = useState(producto.destacado);
-  const [talles, setTalles] = useState<string[]>(producto.ropa?.talle || producto.calzado?.talle.map(String) || []);
-  const [tipoPrenda, setTipoPrenda] = useState(producto.ropa?.tipoPrenda || "");
-  const tallesRopa = ["XS", "S", "M", "L", "XL", "XXL", "XXXL"];
-  const tallesCalzado = Array.from({ length: 11 }, (_, i) => (34 + i).toString());
-
+  const [talles, setTalles] = useState<string[]>(
+    producto.ropa?.talle || producto.calzado?.talle.map(String) || []
+  );
+  const [tipoPrenda] = useState(producto.ropa?.tipoPrenda || "");
   const toggleTalle = (valor: string) => {
     setTalles((prev) =>
       prev.includes(valor) ? prev.filter((v) => v !== valor) : [...prev, valor]
     );
   };
-
   const eliminarImagen = (url: string) => {
     setImagenes((prev) => prev.filter((img) => img !== url));
   };
 
+  // Función para manejar el envío del formulario
+  // Crea un objeto con los datos del producto actualizado y lo envía a la API
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-  const actualizado: Partial<Producto> = {
+    const actualizado: Partial<Producto> = {
       nombre,
       precio,
       color,
@@ -80,17 +73,7 @@ export default function EditarProductoModal({ producto, token, onClose, onUpdate
     }
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/productos/${producto._id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(actualizado),
-      });
-
-      if (!res.ok) throw new Error("Error al actualizar producto");
-
+      await editarProducto(producto._id, actualizado, token);
       onUpdate();
       onClose();
     } catch (err) {
@@ -104,128 +87,63 @@ export default function EditarProductoModal({ producto, token, onClose, onUpdate
       <div className="bg-white p-6 rounded-lg w-full max-w-md overflow-y-auto max-h-screen">
         <h2 className="text-xl font-bold mb-4">Editar Producto</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <label className="block">Nombre:
-          <input
-            type="text"
-            placeholder="Nombre"
+          <InputNombre
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
-            className="w-full p-2 border rounded"
-            required
-          /></label>
-          <label className="block">Precio:
-          <input
-            type="number"
-            placeholder="Precio"
+          />
+
+          <InputPrecio
             value={precio}
             onChange={(e) => setPrecio(Number(e.target.value))}
-            className="w-full p-2 border rounded"
-            required
-          /></label>
-          <label className="block">Colores disponibles:
-          <input
-            type="text"
-            placeholder="Color"
+          />
+
+          <InputColor
             value={color}
             onChange={(e) => setColor(e.target.value)}
-            className="w-full p-2 border rounded"
-            required
-          /></label>
-          <label className="block">Descripcion:
-          <input
-            type="text"
-            placeholder="Descripción"
+          />
+
+          <InputDescripcion
             value={descripcion}
             onChange={(e) => setDescripcion(e.target.value)}
-            className="w-full p-2 border rounded"
-            required
-          /></label>
+          />
 
-          {producto.tipo === "ropa" && (
-            <>
-              <label className="block">Talles disponibles:
-              <div className="flex flex-wrap gap-2">
-                {tallesRopa.map((t) => (
-                  <label key={t} className="flex items-center gap-1">
-                    <input
-                      type="checkbox"
-                      checked={talles.includes(t)}
-                      onChange={() => toggleTalle(t)}
-                    />
-                    {t}
-                  </label>
-                ))}
-              </div></label>
-              <input
-                type="text"
-                placeholder="Tipo de prenda"
-                value={tipoPrenda}
-                onChange={(e) => setTipoPrenda(e.target.value)}
-                className="w-full p-2 border rounded"
-                required
-                disabled
-              />
-            </>
+          {(producto.tipo === "ropa" || producto.tipo === "calzado") && (
+            <SelectorTalles
+              tipo={producto.tipo}
+              tallesSeleccionados={talles}
+              toggleTalle={toggleTalle}
+            />
           )}
 
-          {producto.tipo === "calzado" && (
-            <>
-              <label className="block">Talles disponibles:</label>
-              <div className="flex flex-wrap gap-2">
-                {tallesCalzado.map((t) => (
-                  <label key={t} className="flex items-center gap-1">
-                    <input
-                      type="checkbox"
-                      checked={talles.includes(t)}
-                      onChange={() => toggleTalle(t)}
-                    />
-                    {t}
-                  </label>
-                ))}
-              </div>
-            </>
-          )}
           <label className="block">Imagenes:</label>
           {imagenes.length > 0 && (
             <div className="flex gap-2 flex-wrap">
               {imagenes.map((url, idx) => (
                 <div key={idx} className="relative">
-                  <img
-                    src={url}
-                    alt={`imagen-${idx}`}
-                    className="w-20 h-20 object-cover rounded"
-                  />
+                  <img src={url} alt={`imagen-${idx}`} className="w-20 h-20 object-cover rounded"/>
                   <button
                     type="button"
                     onClick={() => eliminarImagen(url)}
                     className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow"
                     title="Eliminar imagen"
-                  >
-                    ×
-                  </button>
+                  >×</button>
                 </div>
               ))}
             </div>
           )}
-          <label className="block">Stock disponible:
-          <input
-            type="number"
-            value={stock === undefined ? "" : stock}
-            onChange={(e) => setStock(e.target.value === '' ? undefined : Number(e.target.value))}
-            className="w-full p-2 border rounded"
-            placeholder="Stock disponible"
-            min={0}
-            required
-          /></label>
 
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={destacado}
-              onChange={() => setDestacado(!destacado)}
-            />
-            Destacado
-          </label>
+          <InputStock
+            value={stock}
+            onChange={(e) =>
+              setStock(e.target.value === "" ? undefined : Number(e.target.value)
+              )
+            }
+          />
+
+          <CheckboxDestacado
+            checked={destacado}
+            onChange={() => setDestacado(!destacado)}
+          />
 
           <div className="flex justify-between mt-4">
             <button
@@ -247,8 +165,3 @@ export default function EditarProductoModal({ producto, token, onClose, onUpdate
     </div>
   );
 }
-
-
-
-
-

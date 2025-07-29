@@ -1,5 +1,15 @@
 import { useState } from "react";
-
+import InputNombre from "../../components/inputNombre";
+import InputPrecio from "../../components/inputPrecio";
+import InputColor from "../../components/inputColor";
+import InputDescripcion from "../../components/inputDescripcion";
+import InputStock from "../../components/inputStock";
+import CheckboxDestacado from "../../components/checkDestacado";
+import SelectTipoProducto from "../../components/selectTipoProducto";
+import type { ProductoNuevo } from "../../types/producto";
+import SelectorTalles from "../../components/selectorTalles";
+import { agregarProducto } from "../../api/productosApi";
+import { subirMultiplesImagenes } from "../../api/imagenesApi";
 interface Props {
   token: string;
   onClose: () => void;
@@ -11,11 +21,9 @@ interface Props {
 // tipo de prenda, imágenes, stock y si es destacado o no.
 // Utiliza un formulario para capturar la información del producto y enviarla al servidor.
 // También permite subir múltiples imágenes a través de la API de imgbb.
-// El componente maneja el estado de los campos del formulario y la subida de imágenes.
 // Al enviar el formulario, se crea un objeto producto con la información ingresada
 // y se envía una solicitud POST al servidor para agregar el producto a la base de datos
 // Si la solicitud es exitosa, se llama a las funciones onSuccess y onClose pasadas como props.
-// Si ocurre un error, se muestra un mensaje de alerta al usuario.
 export default function AgregarProducto({ token, onClose, onSuccess }: Props) {
   const [nombre, setNombre] = useState("");
   const [precio, setPrecio] = useState(0);
@@ -28,12 +36,6 @@ export default function AgregarProducto({ token, onClose, onSuccess }: Props) {
   const [subiendoImagen, setSubiendoImagen] = useState(false);
   const [stock, setStock] = useState<number | undefined>(undefined);
   const [destacado, setDestacado] = useState(false);
-  const tallesRopa = ["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","XS", "S", "M", "L", "XL", "XXL", "XXXL"];
-  // Talles de calzado del 34 al 44
-  const tallesCalzado = Array.from({ length: 11 }, (_, i) =>
-    (34 + i).toString()
-  );
-// funcion para alternar talles seleccionados
   const toggleTalle = (valor: string) => {
     setTalles((prev) =>
       prev.includes(valor) ? prev.filter((v) => v !== valor) : [...prev, valor]
@@ -41,36 +43,15 @@ export default function AgregarProducto({ token, onClose, onSuccess }: Props) {
   };
 
   // subir multiples imagenes a imgbb
-  const subirMultiplesImagenes = async (files: FileList) => {
+  const manejarSubidaImagenes = async (files: FileList) => {
     setSubiendoImagen(true);
-    const nuevasUrls: string[] = [];
-
-    for (const file of Array.from(files)) { // Convertir FileList a Array
-      const formData = new FormData();
-      formData.append("image", file);
-
-      try {
-        const res = await fetch(
-          `https://api.imgbb.com/1/upload?key=4c25d83bda641c6425e5ecd54e3e8d37`,
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
-        const data = await res.json();
-        if (data.success) {
-          nuevasUrls.push(data.data.url);
-        } else {
-          alert(`Error al subir una imagen: ${file.name}`);
-        }
-      } catch (err) {
-        console.error(err);
-        alert(`Fallo al subir ${file.name}`);
-      }
+    try {
+      const urls = await subirMultiplesImagenes(files);
+      setImagenes((prev) => [...prev, ...urls]);
+    } catch (err) {
+      alert("Ocurrió un error al subir las imágenes.");
+      console.log(err);
     }
-
-    // Agregar las nuevas URLs al estado de imagenes
-    setImagenes((prev) => [...prev, ...nuevasUrls]);
     setSubiendoImagen(false);
   };
 
@@ -78,32 +59,13 @@ export default function AgregarProducto({ token, onClose, onSuccess }: Props) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    interface Producto {
-      nombre: string;
-      precio: number;
-      color: string;
-      descripcion: string;
-      tipo: "ropa" | "accesorio" | "calzado";
-      // imagenUrl: string;
-      imagenes: string[];
-      stock: number;
-      destacado: boolean;
-      ropa?: {
-        talle: string[];
-        tipoPrenda: string;
-      };
-      calzado?: {
-        talle: string[];
-      };
-    }
-//producto a enviar al servidor
-    const producto: Producto = {
+    //producto a enviar al servidor
+    const producto: ProductoNuevo = {
       nombre,
       precio,
       color,
       descripcion,
       tipo,
-      // imagenUrl,
       imagenes: imagenes,
       stock: stock ?? 0,
       destacado,
@@ -121,19 +83,8 @@ export default function AgregarProducto({ token, onClose, onSuccess }: Props) {
         talle: talles,
       };
     }
-
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/productos`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(producto),
-      });
-
-      if (!res.ok) throw new Error("Error al agregar producto");
-
+      await agregarProducto(producto, token);
       onSuccess();
       onClose();
     } catch (error) {
@@ -147,130 +98,41 @@ export default function AgregarProducto({ token, onClose, onSuccess }: Props) {
       <div className="bg-white p-6 rounded-lg w-full max-w-md overflow-y-auto max-h-screen">
         <h2 className="text-xl font-bold mb-4">Agregar Producto</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <label className="block">
-            Nombre:
-            <input
-              type="text"
-              placeholder="Ingrese el Nombre"
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              className="w-full p-2 border rounded"
-              required
-            />
-          </label>
+          <InputNombre
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+          />
+          <InputPrecio
+            value={precio}
+            onChange={(e) => setPrecio(Number(e.target.value))}
+          />
 
-          <label className="block">
-            Precio:
-            <input
-              type="number"
-              placeholder="Precio"
-              value={precio}
-              onChange={(e) => setPrecio(Number(e.target.value))}
-              className="w-full p-2 border rounded"
-              required
-            />
-          </label>
-          <label className="block">
-            Colores Disponibles:
-            <input
-              type="text"
-              placeholder="Color"
-              value={color}
-              onChange={(e) => setColor(e.target.value)}
-              className="w-full p-2 border rounded"
-              required
-            />
-          </label>
-          <label className="block">
-            Descripción:
-            <input
-              type="text"
-              placeholder="Descripción"
-              value={descripcion}
-              onChange={(e) => setDescripcion(e.target.value)}
-              className="w-full p-2 border rounded"
-              required
-            />
-          </label>
-          <label className="block">
-            Tipo de producto:
-            <select
-              value={tipo}
-              onChange={(e) => {
-                setTipo(e.target.value as "ropa" | "accesorio" | "calzado");
-                setTalles([]);
-                setTipoPrenda("");
-              }}
-              className="w-full p-2 border rounded"
-              required
-            >
-              <option value="ropa">Ropa</option>
-              <option value="accesorio">Accesorio</option>
-              <option value="calzado">Calzado</option>
-            </select>
-          </label>
+          <InputColor
+            value={color}
+            onChange={(e) => setColor(e.target.value)}
+          />
+
+          <InputDescripcion
+            value={descripcion}
+            onChange={(e) => setDescripcion(e.target.value)}
+          />
+
+          <SelectTipoProducto
+            tipo={tipo}
+            tipoPrenda={tipoPrenda}
+            onTipoChange={(e) =>
+              setTipo(e.target.value as "ropa" | "accesorio" | "calzado")
+            }
+            onTipoPrendaChange={(e) => setTipoPrenda(e.target.value)}
+          />
 
           {/* Talles */}
-
-          {/* ROPA */}
-          {/* Mostrar talles solo si el tipo es ropa o calzado */}
-          {tipo === "ropa" && (
-            <>
-              <label className="block">
-                Talles disponibles:
-                <div className="flex flex-wrap gap-2">
-                  {tallesRopa.map((t) => (
-                    <label key={t} className="flex items-center gap-1">
-                      <input
-                        type="checkbox"
-                        checked={talles.includes(t)}
-                        onChange={() => toggleTalle(t)}
-                      />
-                      {t}
-                    </label>
-                  ))}
-                </div>
-              </label>
-              <label className="block">
-                Tipo de prenda:
-                <select
-                  value={tipoPrenda}
-                  onChange={(e) => setTipoPrenda(e.target.value)}
-                  className="w-full p-2 border rounded"
-                  required
-                >
-                  <option value="" disabled>
-                    Seleccioná tipo de prenda
-                  </option>
-                  <option value="remera">Remera</option>
-                  <option value="pantalón">Pantalón</option>
-                  <option value="buzo">Buzo</option>
-                  <option value="campera">Campera</option>
-                  <option value="ropa interior">Ropa interior</option>
-                </select>
-              </label>
-            </>
-          )}
-
-          {/* CALZADO */}
-          {tipo === "calzado" && (
-            <>
-              <label className="block">
-                Talles disponibles:
-                <div className="flex flex-wrap gap-2">
-                  {tallesCalzado.map((t) => (
-                    <label key={t} className="flex items-center gap-1">
-                      <input
-                        type="checkbox"
-                        checked={talles.includes(t)}
-                        onChange={() => toggleTalle(t)}
-                      />
-                      {t}
-                    </label>
-                  ))}
-                </div>
-              </label>
-            </>
+          {(tipo === "ropa" || tipo === "calzado") && (
+            <SelectorTalles
+              tipo={tipo}
+              tallesSeleccionados={talles}
+              toggleTalle={toggleTalle}
+            />
           )}
 
           {/* IMAGENES */}
@@ -281,9 +143,9 @@ export default function AgregarProducto({ token, onClose, onSuccess }: Props) {
               accept="image/*"
               multiple
               onChange={(e) => {
-                if (e.target.files) {
-                  subirMultiplesImagenes(e.target.files);
-                }
+                if (e.target.files) manejarSubidaImagenes(e.target.files);
+                // if (e.target.files) {
+                //   subirMultiplesImagenes(e.target.files);
               }}
               className="w-full p-2 border rounded"
             />
@@ -305,30 +167,19 @@ export default function AgregarProducto({ token, onClose, onSuccess }: Props) {
             </div>
           )}
 
-          <label className="block">
-            Stock disponible:
-            <input
-              type="number"
-              value={stock === undefined ? "" : stock}
-              onChange={(e) =>
-                setStock(
-                  e.target.value === "" ? undefined : Number(e.target.value)
-                )
-              }
-              className="w-full p-2 border rounded"
-              placeholder="Stock disponible"
-              min={0}
-              required
-            />
-          </label>
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={destacado}
-              onChange={() => setDestacado(!destacado)}
-            />
-            Destacado
-          </label>
+          <InputStock
+            value={stock}
+            onChange={(e) =>
+              setStock(
+                e.target.value === "" ? undefined : Number(e.target.value)
+              )
+            }
+          />
+
+          <CheckboxDestacado
+            checked={destacado}
+            onChange={() => setDestacado(!destacado)}
+          />
 
           <div className="flex justify-between mt-4">
             <button
