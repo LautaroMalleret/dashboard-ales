@@ -1,17 +1,17 @@
-// export async function login(email: string, password: string): Promise<string> {
-//   const res = await fetch("http://localhost:3000/api/auth/login", {
-//     method: "POST",
-//     headers: {
-//       "Content-Type": "application/json",
-//     },
-//     body: JSON.stringify({ email, password }),
-//   });
+// src/api/auth.ts
 
-//   if (!res.ok) {
-//     const data = await res.json();
-//     throw new Error(data.error || "Error al iniciar sesión");
-//   }
+export const login = async (email: string, password: string): Promise<string> => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
 
-//   const data = await res.json();
-//   return data.token;
-// }
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error || "Error al iniciar sesión");
+  }
+
+  const data = await res.json();
+  return data.token;
+};

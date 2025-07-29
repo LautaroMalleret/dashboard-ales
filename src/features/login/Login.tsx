@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { login } from "../../api/auth"; // Importa la función de login desde tu API
 
 // login del usuario
 // muestra un formulario para ingresar email y contraseña
@@ -18,28 +19,39 @@ export default function Login() {
     e.preventDefault();
     setError("");
 
+    // try {
+    //   const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
+    //     method: "POST",
+    //     headers: { "Content-Type": "application/json" },
+    //     body: JSON.stringify({ email, password })
+    //   });
+
+    //   if (!res.ok) {
+    //     const err = await res.json();
+    //     throw new Error(err.error || "Error al iniciar sesión");
+    //   }
+
+    //   const data = await res.json();
+    //   localStorage.setItem("token", data.token);
+    //   navigate("/dashboard");
+    // } catch (err: unknown) {
+    //   if (err instanceof Error) {
+    //     setError(err.message);
+    //   } else {
+    //     setError("Error al iniciar sesión");
+    //   }
+    // }
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
-      });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Error al iniciar sesión");
-      }
-
-      const data = await res.json();
-      localStorage.setItem("token", data.token);
-      navigate("/dashboard");
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("Error al iniciar sesión");
-      }
+    const token = await login(email, password);
+    localStorage.setItem("token", token);
+    navigate("/dashboard");
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      setError(err.message);
+    } else {
+      setError("Error al iniciar sesión");
     }
+  }
   };
 
   return (
